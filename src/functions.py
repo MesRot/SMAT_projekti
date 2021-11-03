@@ -11,7 +11,7 @@ def EMG_loss(params, data): # NON PARAMETRIC
         mu = (group["input_x_max"] + params[0] * 1000 / group["flow"]).iloc[0]
         h = params[3]
         emg_vals = EMG(group["x"], mu, params[1], params[2], h)
-        error = np.sum((group["ss_tissue"] - emg_vals) ** 2)
+        error = np.sum(((group["ss_tissue"] - emg_vals) ** 2) * group["error_weight"])
         errors.append(error)
     return sum(errors)
 
@@ -43,18 +43,19 @@ def EMG(x, mu, sigma, lambda_, h):
     return h * y
 
 
-def get_model_params(flow, input_integral, results_df):
+def get_model_params(flow, results_df):
     mu_x = results_df[results_df["flow"]==flow]["mu_x"].mean()
      
-    def fit_2d_poly(x, y, variable_to_predict):
-        coefficients = np.polyfit(x, y, 2)
+    def fit_2d_poly(x, y, variable_to_predict, poly_val):
+        coefficients = np.polyfit(x, y, poly_val)
         func = np.poly1d(coefficients)
         value = func(variable_to_predict)
         return value
-    
-    sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow)
-    lambda_ = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow)
-    h = fit_2d_poly(results_df["input_integral"], results_df["h"], input_integral)
+
+    mu_x = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, 1)  
+    sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, 2)
+    lambda_ = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, 1)
+    h = fit_2d_poly(results_df["flow"], results_df["h"], flow, 1)
     return mu_x, sigma, lambda_, h
 
 def get_selected_df(df, flow, sample):
@@ -76,7 +77,7 @@ def plot_against_predictions(flow, sample, results_df, df, save=False):
     x_range = np.linspace(0, 350, 700)
     data = get_selected_df(df, flow, sample)
     input_integral = data["input_integral"].iloc[0]
-    mu_x, sigma, lambda_, h= get_model_params(flow, input_integral, results_df)
+    mu_x, sigma, lambda_, h= get_model_params(flow, results_df)
     # TRANSFORM MU_X -> MU
     mu = (data["input_x_max"] + mu_x * 1000 / data["flow"]).iloc[0]
     #CREATE Y-VALUES
