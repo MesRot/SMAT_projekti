@@ -52,7 +52,9 @@ def get_model_params(flow, results_df, parameter_dict):
         coefficients = np.polyfit(x, y, poly_val)
         func = np.poly1d(coefficients)
         value = func(variable_to_predict)
-        return value
+        return value, coefficients
+
+    #mu_x_dict
 
     mu_x = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, parameter_dict["mu_x_count"])  
     sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, parameter_dict["sigma_count"])
