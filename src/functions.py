@@ -217,3 +217,21 @@ def plot_against_predictions_all(results_df, df, save=False):
     if save:
         fig.savefig("all_predictions.jpg")
     plt.style.use("default")
+
+def plot_all_params(results_df):
+    plt.style.use("fivethirtyeight")
+    fig, (ax1, ax2) = plt.subplots(2,2, sharex=True, figsize=(15, 12))
+    fig.suptitle('Parameter plots against flow')
+    fig.tight_layout(h_pad=5)
+
+    ax1[0].scatter(results_df["flow"], results_df["mu_x"], color="red")
+    ax1[0].set_title('mu_x')
+
+    ax1[1].scatter(results_df["flow"], results_df["sigma"], color="orange")
+    ax1[1].set_title('sigma')
+
+    ax2[0].scatter(results_df["flow"], results_df["lambda_"], color="darkgreen")
+    ax2[0].set_title('lambda')
+
+    ax2[1].scatter(results_df["flow"], results_df["h"], color="blue")
+    ax2[1].set_title('h')
