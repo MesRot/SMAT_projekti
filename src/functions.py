@@ -43,53 +43,33 @@ def EMG(x, mu, sigma, lambda_, h):
     return h * y
 
 
-
-def get_model_params(flow, results_df, parameter_dict):
+def get_model_params(results_df, parameter_dict, flow=None):
     """
     parameter_dict sisältää parametrien määrän
     Esimerkiksi sigma_count kertoo sovitettavan polynomin astemäärän, 2 tarkoittaa toisen asteen polynomia
     josta tulee 3 parametria.
+
+    returns: dictionary with exact values if flow is given, else returns the coefficients of the fit
     """ 
-    def fit_2d_poly(x, y, variable_to_predict, poly_val):
+    #THIS function returns the value of evens in list
+
+    def fit_2d_poly(x, y, poly_val, variable_to_predict=None):
         coefficients = np.polyfit(x, y, poly_val)
-        func = np.poly1d(coefficients)
-        value = func(variable_to_predict)
-        return value, coefficients
-
-    #Rakennetaan jokaiselle parametrille dictionary, jossa arvo sekä kertoimet
-    mu_x, mu_x_coefficients = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, parameter_dict["mu_x_count"])
-    mu_x_dict = {
-
-        "mu_x" : mu_x,
-        "mu_x_coefficients" : mu_x_coefficients
-    }
-
-    sigma, sigma_coefficients = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, parameter_dict["sigma_count"])
-    sigma_dict = {
-
-        "sigma" : sigma,
-        "sigma_coefficients" : sigma_coefficients
-    }
+        if variable_to_predict:
+            func = np.poly1d(coefficients)
+            value = func(variable_to_predict)
+            return value
+        else:
+            return coefficients
     
-    lambda_, lambda_coefficients = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, parameter_dict["lambda_count"])
-    lambda_dict = {
+    parameter_dict = {
+        "mu_x": fit_2d_poly(results_df["flow"], results_df["mu_x"], parameter_dict["mu_x_count"], variable_to_predict=flow),
+        "sigma": fit_2d_poly(results_df["flow"], results_df["sigma"], parameter_dict["sigma_count"], variable_to_predict=flow),
+        "lambda_": fit_2d_poly(results_df["flow"], results_df["lambda_"], parameter_dict["lambda_count"], variable_to_predict=flow),
+        "h": fit_2d_poly(results_df["flow"], results_df["h"], parameter_dict["h_count"], variable_to_predict=flow),
+    } 
 
-        "lambda_" : lambda_,
-        "lambda_coefficients" : lambda_coefficients
-    }
-
-    h, h_coefficients = fit_2d_poly(results_df["flow"], results_df["h"], flow, parameter_dict["h_count"])
-    h_dict = {
-
-        "h" : h,
-        "hcoefficients" : h_coefficients
-    }
-
-    #mu_x = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, parameter_dict["mu_x_count"])  
-    #sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, parameter_dict["sigma_count"])
-    #lambda_ = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, parameter_dict["lambda_count"])
-    #h = fit_2d_poly(results_df["flow"], results_df["h"], flow, parameter_dict["h_count"])
-    return mu_x_dict, sigma_dict, lambda_dict, h_dict
+    return parameter_dict
 
 def get_selected_df(df, flow, sample):
     selected = df[df["flow"] == flow]
