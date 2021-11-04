@@ -2,7 +2,7 @@
 
 ## Kuvaajat malleista joissa selitysaste ja parametrien mallien muuttujien määrä
 
-## get_model_params funktioon mahdollisuus antaa parametrien määrä sisään funktioon
-
 ## Ristiinvalidointi
+
+### Parametrien kuvaajat yhdessä kuvaajassa, eri datapisteet eri värein?
 
