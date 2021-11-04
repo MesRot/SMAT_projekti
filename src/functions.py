@@ -76,12 +76,10 @@ def plot_against_predictions(flow, sample, results_df, df, save=False):
     #CREATE X-RANGE, GET MODEL PARAMETERS
     x_range = np.linspace(0, 350, 700)
     data = get_selected_df(df, flow, sample)
-    input_integral = data["input_integral"].iloc[0]
-    mu_x, sigma, lambda_, h= get_model_params(flow, results_df)
+    mu_x, sigma, lambda_, h = get_model_params(flow, results_df)
     # TRANSFORM MU_X -> MU
     mu = (data["input_x_max"] + mu_x * 1000 / data["flow"]).iloc[0]
     #CREATE Y-VALUES
-    h = get_selected_df(results_df, flow, sample)["h"].iloc[0]
     emg_vals = EMG(x_range, mu, sigma, lambda_, h)
     plt.title(f"PARAMETRIC CURVE FIT, FLOW: {flow}, SAMPLE: {sample}")
     plt.plot(data["x"], data["s_tissue"], color="r")
@@ -160,3 +158,18 @@ def get_r2(df, model_params):
     rss = np.sum((y_vals - df["tissue"]) ** 2)
     tss = np.sum((np.mean(df["tissue"]) - df["tissue"]) ** 2)
     return 1 - (rss / tss)
+
+def plot_against_predictions_all(results_df, df, save=False):
+    x_range = np.linspace(0, 350, 700)
+    plot_count = 0
+    fig, ax = plt.subplots(2, 3)
+    for i, group in df.groupby(["flow", "sample"]):
+        flow, sample = i
+        ax[i % 3, i % 2]
+        mu_x, sigma, lambda_, h = get_model_params(flow=flow, results_df = results_df)
+        mu = (group["input_x_max"] + mu_x * 1000 / flow).iloc[0]
+        emg_vals = EMG(x_range, mu, sigma, lambda_, h)
+        plt.title(f"PARAMETRIC CURVE FIT, FLOW: {flow}, SAMPLE: {sample}")
+        ax[plot_count % 3, plot_count % 2].plot(group["x"], group["s_tissue"], color="r")
+        ax[plot_count % 3, plot_count % 2].plot(x_range, emg_vals, color="b")
+        plot_count += 1
