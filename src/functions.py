@@ -43,7 +43,11 @@ def EMG(x, mu, sigma, lambda_, h):
     return h * y
 
 
-def get_model_params(flow, results_df):
+#parameter_dict sisältää parametrien määrän
+#esimerkiksi sigma_count kertoo sovitettavan polynomin astemäärän, 2 tarkoittaa toisen asteen polynomia
+#josta tulee 3 parametria.
+def get_model_params(flow, results_df, parameter_dict):
+
     mu_x = results_df[results_df["flow"]==flow]["mu_x"].mean()
      
     def fit_2d_poly(x, y, variable_to_predict, poly_val):
@@ -52,10 +56,10 @@ def get_model_params(flow, results_df):
         value = func(variable_to_predict)
         return value
 
-    mu_x = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, 1)  
-    sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, 2)
-    lambda_ = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, 1)
-    h = fit_2d_poly(results_df["flow"], results_df["h"], flow, 1)
+    mu_x = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, parameter_dict["mu_x_count"])  
+    sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, parameter_dict["sigma_count"])
+    lambda_ = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, parameter_dict["lambda_count"])
+    h = fit_2d_poly(results_df["flow"], results_df["h"], flow, parameter_dict["h_count"])
     return mu_x, sigma, lambda_, h
 
 def get_selected_df(df, flow, sample):
@@ -72,12 +76,12 @@ def get_interpolated_sample(start, stop, data, samples, variables, x_axis_var):
         samples.append(spline(x))
     return x, samples
 
-def plot_against_predictions(flow, sample, results_df, df, save=False):
+def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=False):
     #CREATE X-RANGE, GET MODEL PARAMETERS
     x_range = np.linspace(0, 350, 700)
     data = get_selected_df(df, flow, sample)
     input_integral = data["input_integral"].iloc[0]
-    mu_x, sigma, lambda_, h= get_model_params(flow, results_df)
+    mu_x, sigma, lambda_, h= get_model_params(flow, results_df, parameter_dict)
     # TRANSFORM MU_X -> MU
     mu = (data["input_x_max"] + mu_x * 1000 / data["flow"]).iloc[0]
     #CREATE Y-VALUES
