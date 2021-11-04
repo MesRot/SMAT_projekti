@@ -153,4 +153,10 @@ def fit_curves(dataframe):
     results_df = results_df.merge(dataframe, how="inner", on=["flow", "sample"])
     results_df
 
-
+def get_r2(df, model_params):
+    mu_x, sigma, lambda_, h = model_params 
+    mu = (df["input_x_max"] + mu_x * 1000 / df["flow"]).iloc[0]
+    y_vals = EMG(df["midpoint"], mu, sigma, lambda_, h)
+    rss = np.sum((y_vals - df["tissue"]) ** 2)
+    tss = np.sum((np.mean(df["tissue"]) - df["tissue"]) ** 2)
+    return 1 - (rss / tss)
