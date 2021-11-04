@@ -214,7 +214,7 @@ def plot_all_params(results_df, parameter_dict):
     ax1[0].scatter(results_df["flow"], results_df["mu_x"], color="red")
     ax1[0].set_title('mu_x')
 
-    ax1[1].scatter(results_df["flow"], results_df["sigma"], color="orange")
+    ax1[1].scatter(results_df["flow"], results_df["sigma"], color="magenta")
     ax1[1].set_title('sigma')
 
     ax2[0].scatter(results_df["flow"], results_df["lambda_"], color="darkgreen")
@@ -228,7 +228,7 @@ def plot_all_params(results_df, parameter_dict):
         coefficients = get_model_params(results_df, parameter_dict, None)
 
         func = np.poly1d(coefficients["mu_x"])
-        x_range = np.linspace(0, 300)
+        x_range = np.linspace(100, 300)
         y_values = func(x_range)
 
         ax1[0].plot(x_range, y_values)
