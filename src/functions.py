@@ -47,8 +47,6 @@ def EMG(x, mu, sigma, lambda_, h):
 #esimerkiksi sigma_count kertoo sovitettavan polynomin astemäärän, 2 tarkoittaa toisen asteen polynomia
 #josta tulee 3 parametria.
 def get_model_params(flow, results_df, parameter_dict):
-
-    mu_x = results_df[results_df["flow"]==flow]["mu_x"].mean()
      
     def fit_2d_poly(x, y, variable_to_predict, poly_val):
         coefficients = np.polyfit(x, y, poly_val)
