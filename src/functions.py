@@ -201,16 +201,17 @@ def get_r2(df, model_params):
     tss = np.sum((np.mean(df["tissue"]) - df["tissue"]) ** 2)
     return 1 - (rss / tss)
 
-def plot_against_predictions_all(results_df, df, save=False):
+def plot_against_predictions_all(results_df, df, param_dict, save=False):
     x_range = np.linspace(0, 350, 700)
     plt.style.use('fivethirtyeight')
     fig, ax = plt.subplots(2, 3, figsize=(15, 10), sharex=True, sharey=True, num="bmh")
     for i, group in df.groupby(["flow", "sample"]):
         flow, sample = i
         row, column = sample - 1, int(flow / 100 - 1)
-        mu_x, sigma, lambda_, h = get_model_params(flow=flow, results_df = results_df)
-        mu = (group["input_x_max"] + mu_x * 1000 / flow).iloc[0]
-        emg_vals = EMG(x_range, mu, sigma, lambda_, h)
+        mu_x, sigma, lambda_, h = get_model_params(flow=flow, results_df = results_df, parameter_dict=param_dict)
+        r2 = get_r2(group, [mu_x["mu_x"], sigma["sigma"], lambda_["lambda_"], h["h"]])
+        mu = (group["input_x_max"] + mu_x["mu_x"] * 1000 / flow).iloc[0]
+        emg_vals = EMG(x_range, mu, sigma["sigma"], lambda_["lambda_"], h["h"])
         ax[row, column].title.set_text(f"Flow: {flow}, Sample: {sample}")
         ax[row, column].scatter(group["midpoint"], group["tissue"], color="r")
         ax[row, column].plot(x_range, emg_vals, color="b")
