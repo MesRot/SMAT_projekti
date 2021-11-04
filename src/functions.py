@@ -51,8 +51,6 @@ def get_model_params(results_df, parameter_dict, flow=None):
 
     returns: dictionary with exact values if flow is given, else returns the coefficients of the fit
     """ 
-    #THIS function returns the value of evens in list
-
     def fit_2d_poly(x, y, poly_val, variable_to_predict=None):
         coefficients = np.polyfit(x, y, poly_val)
         if variable_to_predict:
@@ -90,7 +88,7 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
     x_range = np.linspace(0, 350, 700)
     data = get_selected_df(df, flow, sample)
     input_integral = data["input_integral"].iloc[0]
-    new_parameter_dict= get_model_params(results_df, parameter_dict, flow)
+    mu_x_dict, sigma_dict, lambda_dict, h_dict = get_model_params(results_df, parameter_dict, flow)
     # TRANSFORM MU_X -> MU
 
     #Otetaan arvot dictionaryista
