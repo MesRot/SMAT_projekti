@@ -92,14 +92,15 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
     # TRANSFORM MU_X -> MU
 
     #Otetaan arvot dictionaryista
-    mu_x = mu_x_dict["mu_x"]
-    sigma = sigma_dict["sigma"]
-    lambda_ = lambda_dict["lambda_"]
-    h_dict = h_dict["h"]
+
+    mu_x = new_parameter_dict["mu_x"]
+    sigma = new_parameter_dict["sigma"]
+    lambda_ = new_parameter_dict["lambda_"]
+    h = new_parameter_dict["h"]
 
     mu = (data["input_x_max"] + mu_x * 1000 / data["flow"]).iloc[0]
     #CREATE Y-VALUES
-    h = get_selected_df(results_df, flow, sample)["h"].iloc[0]
+    
     emg_vals = EMG(x_range, mu, sigma, lambda_, h)
     plt.title(f"PARAMETRIC CURVE FIT, FLOW: {flow}, SAMPLE: {sample}")
     plt.plot(data["x"], data["s_tissue"], color="r")
@@ -202,7 +203,7 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
         fig.savefig("all_predictions.jpg")
     plt.style.use("default")
 
-def plot_all_params(results_df):
+def plot_all_params(results_df, parameter_dict):
     plt.style.use("fivethirtyeight")
     fig, (ax1, ax2) = plt.subplots(2,2, sharex=True, figsize=(15, 12))
     fig.suptitle('Parameter plots against flow')
@@ -219,3 +220,28 @@ def plot_all_params(results_df):
 
     ax2[1].scatter(results_df["flow"], results_df["h"], color="blue")
     ax2[1].set_title('h')
+
+    if parameter_dict:
+        #Palauttaa dictionaryn jossa on jokaisen parametrin kertoimet sen mallin funktioon
+        coefficients = get_model_params(results_df, parameter_dict, None)
+
+        func = np.poly1d(coefficients["mu_x"])
+        x_range = np.linspace(0, 300)
+        y_values = func(x_range)
+
+        ax1[0].plot(x_range, y_values)
+
+        func = np.poly1d(coefficients["sigma"])
+        y_values = func(x_range)
+
+        ax1[1].plot(x_range, y_values)
+
+        func = np.poly1d(coefficients["lambda_"])
+        y_values = func(x_range)
+
+        ax2[0].plot(x_range, y_values)
+
+        func = np.poly1d(coefficients["h"])
+        y_values = func(x_range)
+
+        ax2[1].plot(x_range, y_values)
