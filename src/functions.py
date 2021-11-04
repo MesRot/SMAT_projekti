@@ -43,23 +43,53 @@ def EMG(x, mu, sigma, lambda_, h):
     return h * y
 
 
-#parameter_dict sisältää parametrien määrän
-#esimerkiksi sigma_count kertoo sovitettavan polynomin astemäärän, 2 tarkoittaa toisen asteen polynomia
-#josta tulee 3 parametria.
+
 def get_model_params(flow, results_df, parameter_dict):
+    """
+    parameter_dict sisältää parametrien määrän
+    Esimerkiksi sigma_count kertoo sovitettavan polynomin astemäärän, 2 tarkoittaa toisen asteen polynomia
+    josta tulee 3 parametria.
+    """ 
     def fit_2d_poly(x, y, variable_to_predict, poly_val):
         coefficients = np.polyfit(x, y, poly_val)
         func = np.poly1d(coefficients)
         value = func(variable_to_predict)
         return value, coefficients
 
-    #mu_x_dict
+    #Rakennetaan jokaiselle parametrille dictionary, jossa arvo sekä kertoimet
+    mu_x, mu_x_coefficients = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, parameter_dict["mu_x_count"])
+    mu_x_dict = {
 
-    mu_x = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, parameter_dict["mu_x_count"])  
-    sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, parameter_dict["sigma_count"])
-    lambda_ = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, parameter_dict["lambda_count"])
-    h = fit_2d_poly(results_df["flow"], results_df["h"], flow, parameter_dict["h_count"])
-    return mu_x, sigma, lambda_, h
+        "mu_x" : mu_x,
+        "mu_x_coefficients" : mu_x_coefficients
+    }
+
+    sigma, sigma_coefficients = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, parameter_dict["sigma_count"])
+    sigma_dict = {
+
+        "sigma" : sigma,
+        "sigma_coefficients" : sigma_coefficients
+    }
+    
+    lambda_, lambda_coefficients = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, parameter_dict["lambda_count"])
+    lambda_dict = {
+
+        "lambda_" : lambda_,
+        "lambda_coefficients" : lambda_coefficients
+    }
+
+    h, h_coefficients = fit_2d_poly(results_df["flow"], results_df["h"], flow, parameter_dict["h_count"])
+    h_dict = {
+
+        "h" : h,
+        "hcoefficients" : h_coefficients
+    }
+
+    #mu_x = fit_2d_poly(results_df["flow"], results_df["mu_x"], flow, parameter_dict["mu_x_count"])  
+    #sigma = fit_2d_poly(results_df["flow"], results_df["sigma"], flow, parameter_dict["sigma_count"])
+    #lambda_ = fit_2d_poly(results_df["flow"], results_df["lambda_"], flow, parameter_dict["lambda_count"])
+    #h = fit_2d_poly(results_df["flow"], results_df["h"], flow, parameter_dict["h_count"])
+    return mu_x_dict, sigma_dict, lambda_dict, h_dict
 
 def get_selected_df(df, flow, sample):
     selected = df[df["flow"] == flow]
@@ -80,10 +110,18 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
     x_range = np.linspace(0, 350, 700)
     data = get_selected_df(df, flow, sample)
     input_integral = data["input_integral"].iloc[0]
-    mu_x, sigma, lambda_, h= get_model_params(flow, results_df, parameter_dict)
+    mu_x_dict, sigma_dict, lambda_dict, h_dict= get_model_params(flow, results_df, parameter_dict)
     # TRANSFORM MU_X -> MU
+
+    #Otetaan arvot dictionaryista
+    mu_x = mu_x_dict["mu_x"]
+    sigma = sigma_dict["sigma"]
+    lambda_ = lambda_dict["lambda_"]
+    h_dict = h_dict["h"]
+
     mu = (data["input_x_max"] + mu_x * 1000 / data["flow"]).iloc[0]
     #CREATE Y-VALUES
+    h = get_selected_df(results_df, flow, sample)["h"].iloc[0]
     emg_vals = EMG(x_range, mu, sigma, lambda_, h)
     plt.title(f"PARAMETRIC CURVE FIT, FLOW: {flow}, SAMPLE: {sample}")
     plt.plot(data["x"], data["s_tissue"], color="r")
