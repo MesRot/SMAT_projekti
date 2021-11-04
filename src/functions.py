@@ -47,9 +47,6 @@ def EMG(x, mu, sigma, lambda_, h):
 #esimerkiksi sigma_count kertoo sovitettavan polynomin astemäärän, 2 tarkoittaa toisen asteen polynomia
 #josta tulee 3 parametria.
 def get_model_params(flow, results_df, parameter_dict):
-    """
-    Tähän voi kirjoittaa infoa funktion argumenteista
-    """ 
     def fit_2d_poly(x, y, variable_to_predict, poly_val):
         coefficients = np.polyfit(x, y, poly_val)
         func = np.poly1d(coefficients)
@@ -168,15 +165,17 @@ def get_r2(df, model_params):
 
 def plot_against_predictions_all(results_df, df, save=False):
     x_range = np.linspace(0, 350, 700)
-    plot_count = 0
-    fig, ax = plt.subplots(2, 3)
+    plt.style.use('fivethirtyeight')
+    fig, ax = plt.subplots(2, 3, figsize=(15, 10), sharex=True, sharey=True, num="bmh")
     for i, group in df.groupby(["flow", "sample"]):
         flow, sample = i
-        ax[i % 3, i % 2]
+        row, column = sample - 1, int(flow / 100 - 1)
         mu_x, sigma, lambda_, h = get_model_params(flow=flow, results_df = results_df)
         mu = (group["input_x_max"] + mu_x * 1000 / flow).iloc[0]
         emg_vals = EMG(x_range, mu, sigma, lambda_, h)
-        plt.title(f"PARAMETRIC CURVE FIT, FLOW: {flow}, SAMPLE: {sample}")
-        ax[plot_count % 3, plot_count % 2].plot(group["x"], group["s_tissue"], color="r")
-        ax[plot_count % 3, plot_count % 2].plot(x_range, emg_vals, color="b")
-        plot_count += 1
+        ax[row, column].title.set_text(f"Flow: {flow}, Sample: {sample}")
+        ax[row, column].scatter(group["midpoint"], group["tissue"], color="r")
+        ax[row, column].plot(x_range, emg_vals, color="b")
+    if save:
+        fig.savefig("all_predictions.jpg")
+    plt.style.use("default")
