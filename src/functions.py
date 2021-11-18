@@ -3,10 +3,12 @@ import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
 
-# Calculates the error of the original normalized graph compared to the model graph.
-#
-# Original graph we are trying to model is first normalized to integrate to 1.
-# Then the created EMG graph is compared to it (integrates to 1 too). Used norm is mean squared error.
+'''
+Calculates the error of the original normalized graph compared to the model graph.
+
+Original graph we are trying to model is first normalized to integrate to 1.
+Then the created EMG graph is compared to it (integrates to 1 too). Used norm is mean squared error.
+'''
 def EMG_loss(params, data): # NON PARAMETRIC
     errors = []
     groups = data.groupby(["flow", "sample"])
@@ -18,9 +20,11 @@ def EMG_loss(params, data): # NON PARAMETRIC
         errors.append(error)
     return sum(errors)
 
-# Calculates the error of the original (not normalized) graph compared to the model graph (scaled with custom h).
-#
-# Used norm is mean squared error.
+'''
+Calculates the error of the original (not normalized) graph compared to the model graph (scaled with custom h).
+
+Used norm is mean squared error.
+'''
 def EMG_loss_h(params, data, other_params): # NON PARAMETRIC
     errors = []
     groups = data.groupby(["flow", "sample"])
@@ -32,17 +36,18 @@ def EMG_loss_h(params, data, other_params): # NON PARAMETRIC
         error = np.mean((group["s_tissue"] - emg_vals) ** 2)
         errors.append(error)
     return sum(errors)
+'''
+Exponentially modified Gaussian distribution
+Returns the graph with specified parameters.
 
-# Exponentially modified Gaussian distribution
-# Returns the graph with specified parameters.
-#
-# mu is used to move peak of the graph
-# sigma is used to control the width of the graph
-# lambda_ is used to control the "tail" of the graph
-# h is used for scaling the graph for right heigth, doesnt alter the shape
-#
-# The function is defined in the following way so that it behaves numerically better,
-# see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution for more information
+mu is used to move peak of the graph
+sigma is used to control the width of the graph
+lambda_ is used to control the "tail" of the graph
+h is used for scaling the graph for right heigth, doesnt alter the shape
+
+The function is defined in the following way so that it behaves numerically better,
+see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution for more information
+'''
 def EMG(x, mu, sigma, lambda_, h):
     def formula1(x, mu, sigma):
         tau = 1 / lambda_
@@ -58,24 +63,20 @@ def EMG(x, mu, sigma, lambda_, h):
 
     return h * y
 
-# Returns the final parameters of the model; mu_x (not mu), sigma, lambda_ and h.
-# 
-# Model parameters are based on optimized graphs created for each dataset. Each parameter has
-# 6 results for each dataset. Then a polynomial is fitted through the points resulting the final
-# model parameter. 
-#
-# results_df = results of parameters????
-# parameter_dict = polynomial degree to be fitted through the points.
-# flow = if flow is presented this returns ?????
-#        if flow is not presented this returns parameters of the model
-def get_model_params(results_df, parameter_dict, flow=None):
-    """
-    parameter_dict sisältää parametrien määrän
-    Esimerkiksi sigma_count kertoo sovitettavan polynomin astemäärän, 2 tarkoittaa toisen asteen polynomia
-    josta tulee 3 parametria.
+'''
+Returns the final parameters of the model; mu_x (not mu), sigma, lambda_ and h.
+ 
+Model parameters are based on optimized graphs created for each dataset. Each parameter has
+6 results for each dataset. Then a polynomial is fitted through the points resulting the final
+model parameter. 
 
-    returns: dictionary with exact values if flow is given, else returns the coefficients of the fit
-    """ 
+results_df = results of individual 
+parameter_dict = polynomial degree to be fitted through the points.
+flow = if flow is presented this returns parameter value for specified flow
+       if flow is not presented this returns parameters of the model
+'''
+def get_model_params(results_df, parameter_dict, flow=None):
+
     def fit_2d_poly(x, y, poly_val, variable_to_predict=None):
         coefficients = np.polyfit(x, y, poly_val)
         if variable_to_predict:
@@ -94,13 +95,17 @@ def get_model_params(results_df, parameter_dict, flow=None):
 
     return parameter_dict
 
-# Gets the desired part (what flow and what sample) of dataframe
+'''
+Gets the desired part (what flow and what sample) of dataframe
+'''
 def get_selected_df(df, flow, sample):
     selected = df[df["flow"] == flow]
     selected = selected[selected["sample"] == sample]
     return selected
 
-# 
+'''
+Creates interpolated graph
+'''
 def get_interpolated_sample(start, stop, data, samples, variables, x_axis_var):
     x = np.linspace(start, stop, samples)
     samples = []
@@ -109,24 +114,28 @@ def get_interpolated_sample(start, stop, data, samples, variables, x_axis_var):
         samples.append(spline(x))
     return x, samples
 
+'''
+Plots the specified (same flow and sample) original graph and the modelled graph.
+'''
 def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=False):
+
     #CREATE X-RANGE, GET MODEL PARAMETERS
     x_range = np.linspace(0, 350, 700)
     data = get_selected_df(df, flow, sample)
+
     input_integral = data["input_integral"].iloc[0]
-    mu_x_dict, sigma_dict, lambda_dict, h_dict = get_model_params(results_df, parameter_dict, flow)
+    new_parameter_dict = get_model_params(results_df, parameter_dict, flow)
     # TRANSFORM MU_X -> MU
 
-    #Otetaan arvot dictionaryista
-
+    # Get values from dictionary
     mu_x = new_parameter_dict["mu_x"]
     sigma = new_parameter_dict["sigma"]
     lambda_ = new_parameter_dict["lambda_"]
     h = new_parameter_dict["h"]
 
     mu = (data["input_x_max"] + mu_x * 1000 / data["flow"]).iloc[0]
+
     #CREATE Y-VALUES
-    
     emg_vals = EMG(x_range, mu, sigma, lambda_, h)
     plt.title(f"PARAMETRIC CURVE FIT, FLOW: {flow}, SAMPLE: {sample}")
     plt.plot(data["x"], data["s_tissue"], color="r")
@@ -134,11 +143,16 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
     if save:
         plt.savefig(f"kuvaajat/param_curve_fit_{flow}_{sample}.png")
     plt.show()
-    
 
+'''
+Optimization function.
+
+Finds optimized parameters for each dataset individually.
+'''
 def fit_curves(dataframe):
     groups = dataframe.groupby(["flow", "sample"]) # NON PARAMETRIC
 
+    #Result parameters.
     results_dict = {
         "flow": [],
         "sample": [],
@@ -149,16 +163,20 @@ def fit_curves(dataframe):
         "h": []
     }
 
+    #Optimize for every dataset.
     for i, group in groups:
-        mu_x_alkuarvaus = 6.3259260
-        sigma_alkuarvaus = 20
-        lambda_alkuarvaus = 0.05
+        # Guesses for the parameters, used in optimization.
+        mu_x_initial_guess = 6.3259260
+        sigma_initial_guess = 20
+        lambda_initial_guess = 0.05
 
         bounds = [(None, None), (1e-5, None), (1e-5, None), (None, None)]
 
-        x_0 = [mu_x_alkuarvaus, sigma_alkuarvaus, lambda_alkuarvaus, 1]
+        x_0 = [mu_x_initial_guess, sigma_initial_guess, lambda_initial_guess, 1]
         print("STARTING FIRST OPTIMIZE")
-        # SOVITTAA NORMALISOITUUN KÄYRÄÄN PARAMETRIT
+
+        # Fits a graph to original NORMALIZED graph here.
+        # Finds optimal parameters for SPECIFIED DATASET ONLY.
         res1 = scipy.optimize.minimize(EMG_loss, args=group, x0=x_0, bounds=bounds)
         print(f"ENDING FIRST OPTIMIZE. PARAMS: {res1['x']}")
         #res = scipy.optimize.differential_evolution(EMG_loss, bounds=bounds, args=[group])
@@ -167,6 +185,7 @@ def fit_curves(dataframe):
         sigma = res1["x"][1]
         lambda_ = res1["x"][2]
 
+        # Parameters for the optimized graph for the specified dataset.
         emg_params = {
             "mu_x": res1["x"][0],
             "sigma": sigma,
@@ -174,13 +193,15 @@ def fit_curves(dataframe):
         }
 
         print("STARTING SECOND OPTIMIZE")
-        # SOVITTAA KORKEUSPARAMETRIN NIIN ETTÄ SE NORMALISOIMATON MÄTSÄÄ OIKEAAN
+        # Finds the heigh scaling parameter to scale the modelled graph to original graph
         res2 = scipy.optimize.minimize(EMG_loss_h, args=(group, emg_params), x0=[80000])
         print(f"ENDING SECOND OPTIMIZE. PARAMS: {res2['x']}")
 
+        #Scale parameter h for the specified dataset.
         h = res2["x"][0]
 
-
+        # Plot the results for visualization.
+        # Append the results dictionary with results.
         pred_y = EMG(x_range, mu, sigma, lambda_, h)
         plt.plot(x_range, pred_y, color="b")
         plt.plot(group["x"], group["s_tissue"], color="r")
@@ -194,10 +215,14 @@ def fit_curves(dataframe):
         results_dict["lambda_"].append(lambda_)
         results_dict["h"].append(h)
 
+    # Final results.
     results_df = pd.DataFrame(results_dict)
     results_df = results_df.merge(dataframe, how="inner", on=["flow", "sample"])
-    results_df
+    return results_df
 
+'''
+Returns the r-squared of the model.
+'''
 def get_r2(df, model_params):
     mu_x, sigma, lambda_, h = model_params 
     mu = (df["input_x_max"] + mu_x * 1000 / df["flow"]).iloc[0]
@@ -206,6 +231,9 @@ def get_r2(df, model_params):
     tss = np.sum((np.mean(df["tissue"]) - df["tissue"]) ** 2)
     return 1 - (rss / tss)
 
+'''
+Plots all orignal graph and their respective modelled graphs.
+'''
 def plot_against_predictions_all(results_df, df, param_dict, save=False):
     x_range = np.linspace(0, 350, 700)
     plt.style.use('fivethirtyeight')
@@ -229,6 +257,10 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
         fig.savefig("all_predictions.jpg")
     plt.style.use("default")
 
+'''
+Plots all parameters and the polynomial fitted through them.
+The fitted polynomial represents the final model parameter.
+'''
 def plot_all_params(results_df, parameter_dict):
     plt.style.use("fivethirtyeight")
     fig, (ax1, ax2) = plt.subplots(2,2, sharex=True, figsize=(15, 12))
