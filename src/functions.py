@@ -94,8 +94,6 @@ def get_model_params(results_df, parameter_dict, flow=None):
         "h": fit_2d_poly(results_df["flow"], results_df["h"], parameter_dict["h_count"], variable_to_predict=flow),
     }
 
-    print(parameter_dict)
-
     return parameter_dict
 
 def get_selected_df(df, flow, sample):
@@ -258,7 +256,6 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
         ax[row, column].plot(x_range, emg_vals, color="b")
     if save:
         fig.savefig("all_predictions.jpg")
-    plt.style.use("default")
 
 def plot_all_params(results_df, parameter_dict):
     '''
