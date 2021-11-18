@@ -3,7 +3,7 @@ import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
 
-def EMG_loss(params, data): # NON PARAMETRIC
+def EMG_loss(params, data):
     '''
     Calculates the error of the original normalized graph compared to the model graph.
 
@@ -20,7 +20,7 @@ def EMG_loss(params, data): # NON PARAMETRIC
         errors.append(error)
     return sum(errors)
 
-def EMG_loss_h(params, data, other_params): # NON PARAMETRIC
+def EMG_loss_h(params, data, other_params):
     '''
     Calculates the error of the original (not normalized) graph compared to the model graph (scaled with custom h).
 
@@ -125,7 +125,6 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
 
     input_integral = data["input_integral"].iloc[0]
     new_parameter_dict = get_model_params(results_df, parameter_dict, flow)
-    # TRANSFORM MU_X -> MU
 
     # Get values from dictionary
     mu_x = new_parameter_dict["mu_x"]
@@ -133,6 +132,7 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
     lambda_ = new_parameter_dict["lambda_"]
     h = new_parameter_dict["h"]
 
+    # TRANSFORM MU_X -> MU
     mu = (data["input_x_max"] + mu_x * 1000 / data["flow"]).iloc[0]
 
     #CREATE Y-VALUES
@@ -144,82 +144,6 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
         plt.savefig(f"kuvaajat/param_curve_fit_{flow}_{sample}.png")
     plt.show()
 
-def fit_curves(dataframe):
-    '''
-    Optimization function.
-
-    Finds optimized parameters for each dataset individually.
-    '''
-    groups = dataframe.groupby(["flow", "sample"]) # NON PARAMETRIC
-
-    #Result parameters.
-    results_dict = {
-        "flow": [],
-        "sample": [],
-        "mu": [],
-        "mu_x": [],
-        "lambda_": [],
-        "sigma": [],
-        "h": []
-    }
-
-    #Optimize for every dataset.
-    for i, group in groups:
-        # Guesses for the parameters, used in optimization.
-        mu_x_initial_guess = 6.3259260
-        sigma_initial_guess = 20
-        lambda_initial_guess = 0.05
-
-        bounds = [(None, None), (1e-5, None), (1e-5, None), (None, None)]
-
-        x_0 = [mu_x_initial_guess, sigma_initial_guess, lambda_initial_guess, 1]
-        print("STARTING FIRST OPTIMIZE")
-
-        # Fits a graph to original NORMALIZED graph here.
-        # Finds optimal parameters for SPECIFIED DATASET ONLY.
-        res1 = scipy.optimize.minimize(EMG_loss, args=group, x0=x_0, bounds=bounds)
-        print(f"ENDING FIRST OPTIMIZE. PARAMS: {res1['x']}")
-        #res = scipy.optimize.differential_evolution(EMG_loss, bounds=bounds, args=[group])
-        x_range = np.linspace(0, 300, 900)
-        mu = (group["input_x_max"] + res1["x"][0] * 1000 / group["flow"]).iloc[0]
-        sigma = res1["x"][1]
-        lambda_ = res1["x"][2]
-
-        # Parameters for the optimized graph for the specified dataset.
-        emg_params = {
-            "mu_x": res1["x"][0],
-            "sigma": sigma,
-            "lambda_": lambda_
-        }
-
-        print("STARTING SECOND OPTIMIZE")
-        # Finds the heigh scaling parameter to scale the modelled graph to original graph
-        res2 = scipy.optimize.minimize(EMG_loss_h, args=(group, emg_params), x0=[80000])
-        print(f"ENDING SECOND OPTIMIZE. PARAMS: {res2['x']}")
-
-        #Scale parameter h for the specified dataset.
-        h = res2["x"][0]
-
-        # Plot the results for visualization.
-        # Append the results dictionary with results.
-        pred_y = EMG(x_range, mu, sigma, lambda_, h)
-        plt.plot(x_range, pred_y, color="b")
-        plt.plot(group["x"], group["s_tissue"], color="r")
-        #print(f'FLOW: {group["flow"].iloc[0]}, SAMPLE: {group["sample"].iloc[0]}, SIGMA: {res["x"][1]}, LAMBDA: {res["x"][2]}, MU_x: {res["x"][0]}')
-        plt.show()
-        results_dict["flow"].append(group["flow"].iloc[0])
-        results_dict["sample"].append(group["sample"].iloc[0])
-        results_dict["mu"].append(mu)
-        results_dict["mu_x"].append(res1["x"][0])
-        results_dict["sigma"].append(sigma)
-        results_dict["lambda_"].append(lambda_)
-        results_dict["h"].append(h)
-
-    # Final results.
-    # results_df contains all the optimized parameters (mu_x, sigma, lambda_, h) for individual datasets.
-    results_df = pd.DataFrame(results_dict)
-    results_df = results_df.merge(dataframe, how="inner", on=["flow", "sample"])
-    return results_df
 
 def get_r2(df, model_params):
     '''
@@ -231,6 +155,7 @@ def get_r2(df, model_params):
     rss = np.sum((y_vals - df["tissue"]) ** 2)
     tss = np.sum((np.mean(df["tissue"]) - df["tissue"]) ** 2)
     return 1 - (rss / tss)
+
 
 def plot_against_predictions_all(results_df, df, param_dict, save=False):
     '''
@@ -257,6 +182,7 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
     if save:
         fig.savefig("all_predictions.jpg")
 
+
 def plot_all_params(results_df, parameter_dict):
     '''
     Plots all parameters and the polynomial fitted through them.
@@ -269,16 +195,18 @@ def plot_all_params(results_df, parameter_dict):
 
     #Plot all parameter values to own figure.
     ax1[0].scatter(results_df["flow"], results_df["mu_x"], color="red")
-    ax1[0].set_title('mu_x')
+    plt.rcParams['text.usetex'] = True
+    ax1[0].set_title(r'$\mu_x$')
 
-    ax1[1].scatter(results_df["flow"], results_df["sigma"], color="magenta")
-    ax1[1].set_title('sigma')
+    ax1[1].scatter(results_df["flow"], results_df["sigma"], color="red")
+    ax1[1].set_title(r'$\sigma$')
 
-    ax2[0].scatter(results_df["flow"], results_df["lambda_"], color="darkgreen")
-    ax2[0].set_title('lambda')
+    ax2[0].scatter(results_df["flow"], results_df["lambda_"], color="red")
+    ax2[0].set_title(r'$\lambda$')
 
-    ax2[1].scatter(results_df["flow"], results_df["h"], color="blue")
+    ax2[1].scatter(results_df["flow"], results_df["h"], color="red")
     ax2[1].set_title('h')
+    plt.rcParams['text.usetex'] = False
 
     if parameter_dict:
         # Gets a dictionary of all final model parameters.
