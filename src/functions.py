@@ -88,7 +88,7 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
     x_range = np.linspace(0, 350, 700)
     data = get_selected_df(df, flow, sample)
     input_integral = data["input_integral"].iloc[0]
-    mu_x_dict, sigma_dict, lambda_dict, h_dict = get_model_params(results_df, parameter_dict, flow)
+    new_parameter_dict = get_model_params(results_df, parameter_dict, flow)
     # TRANSFORM MU_X -> MU
 
     #Otetaan arvot dictionaryista
