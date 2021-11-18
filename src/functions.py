@@ -3,7 +3,10 @@ import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
 
-
+# Calculates the error of the original normalized graph compared to the model graph.
+#
+# Original graph we are trying to model is first normalized to integrate to 1.
+# Then the created EMG graph is compared to it (integrates to 1 too). Used norm is mean squared error.
 def EMG_loss(params, data): # NON PARAMETRIC
     errors = []
     groups = data.groupby(["flow", "sample"])
@@ -11,10 +14,13 @@ def EMG_loss(params, data): # NON PARAMETRIC
         mu = (group["input_x_max"] + params[0] * 1000 / group["flow"]).iloc[0]
         h = params[3]
         emg_vals = EMG(group["x"], mu, params[1], params[2], h)
-        error = np.sum(((group["ss_tissue"] - emg_vals) ** 2) * group["error_weight"])
+        error = np.mean(((group["ss_tissue"] - emg_vals) ** 2) * group["error_weight"])
         errors.append(error)
     return sum(errors)
 
+# Calculates the error of the original (not normalized) graph compared to the model graph (scaled with custom h).
+#
+# Used norm is mean squared error.
 def EMG_loss_h(params, data, other_params): # NON PARAMETRIC
     errors = []
     groups = data.groupby(["flow", "sample"])
@@ -23,10 +29,20 @@ def EMG_loss_h(params, data, other_params): # NON PARAMETRIC
         h = params[0]
         emg_vals = EMG(group["x"], mu, other_params["sigma"], other_params["lambda_"], h)
         #print(np.isnan(emg_vals).any())
-        error = np.sum((group["s_tissue"] - emg_vals) ** 2)
+        error = np.mean((group["s_tissue"] - emg_vals) ** 2)
         errors.append(error)
     return sum(errors)
 
+# Exponentially modified Gaussian distribution
+# Returns the graph with specified parameters.
+#
+# mu is used to move peak of the graph
+# sigma is used to control the width of the graph
+# lambda_ is used to control the "tail" of the graph
+# h is used for scaling the graph for right heigth, doesnt alter the shape
+#
+# The function is defined in the following way so that it behaves numerically better,
+# see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution for more information
 def EMG(x, mu, sigma, lambda_, h):
     def formula1(x, mu, sigma):
         tau = 1 / lambda_
@@ -42,7 +58,16 @@ def EMG(x, mu, sigma, lambda_, h):
 
     return h * y
 
-
+# Returns the final parameters of the model; mu_x (not mu), sigma, lambda_ and h.
+# 
+# Model parameters are based on optimized graphs created for each dataset. Each parameter has
+# 6 results for each dataset. Then a polynomial is fitted through the points resulting the final
+# model parameter. 
+#
+# results_df = results of parameters????
+# parameter_dict = polynomial degree to be fitted through the points.
+# flow = if flow is presented this returns ?????
+#        if flow is not presented this returns parameters of the model
 def get_model_params(results_df, parameter_dict, flow=None):
     """
     parameter_dict sisältää parametrien määrän
@@ -69,12 +94,13 @@ def get_model_params(results_df, parameter_dict, flow=None):
 
     return parameter_dict
 
+# Gets the desired part (what flow and what sample) of dataframe
 def get_selected_df(df, flow, sample):
     selected = df[df["flow"] == flow]
     selected = selected[selected["sample"] == sample]
     return selected
 
-
+# 
 def get_interpolated_sample(start, stop, data, samples, variables, x_axis_var):
     x = np.linspace(start, stop, samples)
     samples = []
