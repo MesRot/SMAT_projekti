@@ -65,9 +65,12 @@ def get_model_params(results_df, parameter_dict, flow=None):
         "sigma": fit_2d_poly(results_df["flow"], results_df["sigma"], parameter_dict["sigma_count"], variable_to_predict=flow),
         "lambda_": fit_2d_poly(results_df["flow"], results_df["lambda_"], parameter_dict["lambda_count"], variable_to_predict=flow),
         "h": fit_2d_poly(results_df["flow"], results_df["h"], parameter_dict["h_count"], variable_to_predict=flow),
-    } 
+    }
+
+    print(parameter_dict)
 
     return parameter_dict
+
 
 def get_selected_df(df, flow, sample):
     selected = df[df["flow"] == flow]
@@ -82,6 +85,7 @@ def get_interpolated_sample(start, stop, data, samples, variables, x_axis_var):
         spline = scipy.interpolate.interp1d(data[x_axis_var], data[var], kind='cubic')
         samples.append(spline(x))
     return x, samples
+
 
 def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=False):
     #CREATE X-RANGE, GET MODEL PARAMETERS
@@ -154,7 +158,6 @@ def fit_curves(dataframe):
 
         h = res2["x"][0]
 
-
         pred_y = EMG(x_range, mu, sigma, lambda_, h)
         plt.plot(x_range, pred_y, color="b")
         plt.plot(group["x"], group["s_tissue"], color="r")
@@ -172,6 +175,7 @@ def fit_curves(dataframe):
     results_df = results_df.merge(dataframe, how="inner", on=["flow", "sample"])
     results_df
 
+
 def get_r2(df, model_params):
     mu_x, sigma, lambda_, h = model_params 
     mu = (df["input_x_max"] + mu_x * 1000 / df["flow"]).iloc[0]
@@ -179,6 +183,7 @@ def get_r2(df, model_params):
     rss = np.sum((y_vals - df["tissue"]) ** 2)
     tss = np.sum((np.mean(df["tissue"]) - df["tissue"]) ** 2)
     return 1 - (rss / tss)
+
 
 def plot_against_predictions_all(results_df, df, param_dict, save=False):
     x_range = np.linspace(0, 350, 700)
@@ -202,6 +207,7 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
     if save:
         fig.savefig("all_predictions.jpg")
     plt.style.use("default")
+
 
 def plot_all_params(results_df, parameter_dict):
     plt.style.use("fivethirtyeight")
