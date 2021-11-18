@@ -216,6 +216,7 @@ def fit_curves(dataframe):
         results_dict["h"].append(h)
 
     # Final results.
+    # results_df contains all the optimized parameters (mu_x, sigma, lambda_, h) for individual datasets.
     results_df = pd.DataFrame(results_dict)
     results_df = results_df.merge(dataframe, how="inner", on=["flow", "sample"])
     return results_df
@@ -267,6 +268,7 @@ def plot_all_params(results_df, parameter_dict):
     fig.suptitle('Parameter plots against flow')
     fig.tight_layout(h_pad=5)
 
+    #Plot all parameter values to own figure.
     ax1[0].scatter(results_df["flow"], results_df["mu_x"], color="red")
     ax1[0].set_title('mu_x')
 
@@ -280,9 +282,10 @@ def plot_all_params(results_df, parameter_dict):
     ax2[1].set_title('h')
 
     if parameter_dict:
-        #Palauttaa dictionaryn jossa on jokaisen parametrin kertoimet sen mallin funktioon
+        # Gets a dictionary of all final model parameters.
         coefficients = get_model_params(results_df, parameter_dict, None)
 
+        #Add fitted polynomial to the figures.
         func = np.poly1d(coefficients["mu_x"])
         x_range = np.linspace(100, 300)
         y_values = func(x_range)
