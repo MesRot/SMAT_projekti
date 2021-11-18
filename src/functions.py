@@ -16,7 +16,7 @@ def EMG_loss(params, data): # NON PARAMETRIC
         mu = (group["input_x_max"] + params[0] * 1000 / group["flow"]).iloc[0]
         h = params[3]
         emg_vals = EMG(group["x"], mu, params[1], params[2], h)
-        error = np.mean(((group["ss_tissue"] - emg_vals) ** 2) * group["error_weight"])
+        error = np.sum(((group["ss_tissue"] - emg_vals) ** 2) * group["error_weight"])
         errors.append(error)
     return sum(errors)
 
@@ -33,7 +33,7 @@ def EMG_loss_h(params, data, other_params): # NON PARAMETRIC
         h = params[0]
         emg_vals = EMG(group["x"], mu, other_params["sigma"], other_params["lambda_"], h)
         #print(np.isnan(emg_vals).any())
-        error = np.mean((group["s_tissue"] - emg_vals) ** 2)
+        error = np.sum((group["s_tissue"] - emg_vals) ** 2)
         errors.append(error)
     return sum(errors)
     
