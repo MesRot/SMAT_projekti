@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 def EMG_loss(params, data):
     '''
     Calculates the error of the original normalized graph compared to the model graph.
+    Used to get the model shape right.
 
     Original graph we are trying to model is first normalized to integrate to 1.
     Then the created EMG graph is compared to it (integrates to 1 too). Used norm is mean squared error.
@@ -22,6 +23,7 @@ def EMG_loss(params, data):
 def EMG_loss_h(params, data, other_params):
     '''
     Calculates the error of the original (not normalized) graph compared to the model graph (scaled with custom h).
+    Finds the models height parameter.
 
     Used norm is mean squared error.
     '''
