@@ -164,7 +164,7 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
     '''
     x_range = np.linspace(0, 350, 700)
     plt.style.use('fivethirtyeight')
-    fig, ax = plt.subplots(2, 3, figsize=(15, 10), sharex=True, sharey=True)
+    fig, ax = plt.subplots(2, 3, figsize=(16, 9), sharex=True, sharey=True)
     num_params = sum(param_dict.values()) + len(param_dict.values())
 
 
@@ -184,13 +184,13 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
         fig.savefig("all_predictions.jpg")
 
 
-def plot_all_params(results_df, parameter_dict):
+def plot_all_params(results_df, parameter_dict, save=False):
     '''
     Plots all parameters and the polynomial fitted through them.
     The fitted polynomial represents the final model parameter.
     '''
     plt.style.use("fivethirtyeight")
-    fig, (ax1, ax2) = plt.subplots(2,2, sharex=True, figsize=(15, 12))
+    fig, (ax1, ax2) = plt.subplots(2,2, sharex=True, figsize=(16, 9))
     fig.suptitle('Parameter values in y-axis and flow values in x-axis', fontsize=20)
     #fig.tight_layout(h_pad=5)
 
@@ -234,3 +234,6 @@ def plot_all_params(results_df, parameter_dict):
         y_values = func(x_range)
 
         ax2[1].plot(x_range, y_values, alpha=0.8)
+
+    if save:
+        fig.savefig("all_params.jpg")
