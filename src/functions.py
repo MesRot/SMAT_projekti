@@ -167,7 +167,6 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
     fig, ax = plt.subplots(2, 3, figsize=(16, 9), sharex=True, sharey=True)
     num_params = sum(param_dict.values()) + len(param_dict.values())
 
-
     fig.suptitle(f'Model predictions plotted against values with {num_params} parameters', fontsize=25)
     for i, group in df.groupby(["flow", "sample"]):
         flow, sample = i
