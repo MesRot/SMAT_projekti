@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 def EMG_loss(params, data):
     '''
@@ -160,7 +161,7 @@ def get_r2(df, model_params):
 
 def plot_against_predictions_all(results_df, df, param_dict, save=False):
     '''
-    Plots all orignal graph and their respective modelled graphs.
+    Plots all original graphs and their respective modelled graphs.
     '''
     x_range = np.linspace(0, 350, 700)
     plt.style.use('fivethirtyeight')
@@ -182,6 +183,49 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
         ax[row, column].plot(x_range, emg_vals)
     if save:
         fig.savefig("all_predictions.jpg")
+    
+def plot_both_models(results_df, df, param_dict, dif_fit_df, save=False):
+    '''
+    Plots all original graphs and both models.
+    '''
+    x_range = np.linspace(0, 350, 700)
+    plt.style.use('fivethirtyeight')
+    fig, ax = plt.subplots(2, 3, figsize=(19, 9), sharex=True, sharey=True)
+
+    fig.suptitle(f'Original tissue graph and both models.', fontsize=25)
+    for i, group in df.groupby(["flow", "sample"]):
+        flow, sample = i
+        row, column = sample - 1, int(flow / 100 - 1)
+        new_parameter_dict = get_model_params(flow=flow, results_df = results_df, parameter_dict=param_dict)
+        
+        mu = (group["input_x_max"] + new_parameter_dict["mu_x"] * 1000 / flow).iloc[0]
+        emg_vals = EMG(x_range, mu, new_parameter_dict["sigma"], new_parameter_dict["lambda_"], new_parameter_dict["h"])
+        ax[row, column].set_title(f"Flow: {flow}, Sample: {sample}", fontsize=15)
+
+        ax[row, column].scatter(group["midpoint"], group["tissue"], color="r") #original
+        ax[row, column].plot(x_range, emg_vals, color="g", alpha=0.6,) #our model
+
+        #dif fit model
+        if (flow == 100 and sample == 1):
+            ax[row, column].plot(dif_fit_df[110:132]["midpoint"], dif_fit_df[110:132]["fit_tissue"], alpha=0.6)
+        if (flow == 100 and sample == 2):
+            ax[row, column].plot(dif_fit_df[88:110]["midpoint"], dif_fit_df[88:110]["fit_tissue"], alpha=0.6)
+        if (flow == 200 and sample == 1):
+            ax[row, column].plot(dif_fit_df[66:88]["midpoint"], dif_fit_df[66:88]["fit_tissue"], alpha=0.6)
+        if (flow == 200 and sample == 2):
+            ax[row, column].plot(dif_fit_df[44:66]["midpoint"], dif_fit_df[44:66]["fit_tissue"], alpha=0.6)
+        if (flow == 300 and sample == 1):
+            ax[row, column].plot(dif_fit_df[22:44]["midpoint"], dif_fit_df[22:44]["fit_tissue"], alpha=0.6)
+        if (flow == 300 and sample == 2):
+            ax[row, column].plot(dif_fit_df[0:22]["midpoint"], dif_fit_df[0:22]["fit_tissue"], alpha=0.6)
+
+    blue_patch = mpatches.Patch(color='blue', alpha=0.6, label='Model: 1PCM')
+    green_patch = mpatches.Patch(color='green', alpha=0.6, label='Model: EMG')
+    red_patch = mpatches.Patch(color='red', alpha=0.8, label='True value')
+    fig.legend(handles=[red_patch, green_patch, blue_patch]) 
+        
+    if save:
+        fig.savefig("both_models.jpg")
 
 
 def plot_all_params(results_df, parameter_dict, save=False):
