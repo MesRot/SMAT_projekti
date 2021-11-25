@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
 
@@ -139,7 +138,7 @@ def plot_against_predictions(flow, sample, results_df, df, parameter_dict, save=
     emg_vals = EMG(x_range, mu, sigma, lambda_, h)
     plt.title(f"PARAMETRIC CURVE FIT, FLOW: {flow}, SAMPLE: {sample}")
     plt.plot(data["x"], data["s_tissue"], color="r")
-    plt.plot(x_range, emg_vals, color="b")
+    plt.plot(x_range, emg_vals)
     if save:
         plt.savefig(f"kuvaajat/param_curve_fit_{flow}_{sample}.png")
     plt.show()
@@ -173,12 +172,12 @@ def plot_against_predictions_all(results_df, df, param_dict, save=False):
         row, column = sample - 1, int(flow / 100 - 1)
         new_parameter_dict = get_model_params(flow=flow, results_df = results_df, parameter_dict=param_dict)
         r2 = get_r2(group, [new_parameter_dict["mu_x"], new_parameter_dict["sigma"], new_parameter_dict["lambda_"], new_parameter_dict["h"]])
-        r2 = str(round(r2, 2))
+        r2 = str(round(r2, 3))
         mu = (group["input_x_max"] + new_parameter_dict["mu_x"] * 1000 / flow).iloc[0]
         emg_vals = EMG(x_range, mu, new_parameter_dict["sigma"], new_parameter_dict["lambda_"], new_parameter_dict["h"])
         ax[row, column].set_title(f"Flow: {flow}, Sample: {sample}, R2: {r2}", fontsize=15)
         ax[row, column].scatter(group["midpoint"], group["tissue"], color="r")
-        ax[row, column].plot(x_range, emg_vals, color="b")
+        ax[row, column].plot(x_range, emg_vals)
     if save:
         fig.savefig("all_predictions.jpg")
 
@@ -190,22 +189,22 @@ def plot_all_params(results_df, parameter_dict):
     '''
     plt.style.use("fivethirtyeight")
     fig, (ax1, ax2) = plt.subplots(2,2, sharex=True, figsize=(15, 12))
-    fig.suptitle('Parameter plots against flow')
-    fig.tight_layout(h_pad=5)
+    fig.suptitle('Parameter values in y-axis and flow values in x-axis', fontsize=20)
+    #fig.tight_layout(h_pad=5)
 
     #Plot all parameter values to own figure.
-    ax1[0].scatter(results_df["flow"], results_df["mu_x"], color="red")
+    ax1[0].scatter(results_df["flow"], results_df["mu_x"], color="red", marker="o", s=50)
     plt.rcParams['text.usetex'] = True
-    ax1[0].set_title(r'$\mu_x$')
+    ax1[0].set_title(r'$\mu_x$ with ' + str(parameter_dict["mu_x_count"]) + " degree polynomial")
 
-    ax1[1].scatter(results_df["flow"], results_df["sigma"], color="red")
-    ax1[1].set_title(r'$\sigma$')
+    ax1[1].scatter(results_df["flow"], results_df["sigma"], color="red", marker="o", s=50)
+    ax1[1].set_title(r'$\sigma$ with ' + str(parameter_dict["sigma_count"]) + " degree polynomial")
 
-    ax2[0].scatter(results_df["flow"], results_df["lambda_"], color="red")
-    ax2[0].set_title(r'$\lambda$')
+    ax2[0].scatter(results_df["flow"], results_df["lambda_"], color="red", marker="o", s=50)
+    ax2[0].set_title(r'$\lambda$ with ' + str(parameter_dict["lambda_count"]) + " degree polynomial")
 
-    ax2[1].scatter(results_df["flow"], results_df["h"], color="red")
-    ax2[1].set_title('h')
+    ax2[1].scatter(results_df["flow"], results_df["h"], color="red", marker="o", s=50)
+    ax2[1].set_title(f'h with {parameter_dict["h_count"]} degree polynomial')
     plt.rcParams['text.usetex'] = False
 
     if parameter_dict:
@@ -217,19 +216,19 @@ def plot_all_params(results_df, parameter_dict):
         x_range = np.linspace(100, 300)
         y_values = func(x_range)
 
-        ax1[0].plot(x_range, y_values)
+        ax1[0].plot(x_range, y_values, alpha=0.8)
 
         func = np.poly1d(coefficients["sigma"])
         y_values = func(x_range)
 
-        ax1[1].plot(x_range, y_values)
+        ax1[1].plot(x_range, y_values, alpha=0.8)
 
         func = np.poly1d(coefficients["lambda_"])
         y_values = func(x_range)
 
-        ax2[0].plot(x_range, y_values)
+        ax2[0].plot(x_range, y_values, alpha=0.8)
 
         func = np.poly1d(coefficients["h"])
         y_values = func(x_range)
 
-        ax2[1].plot(x_range, y_values)
+        ax2[1].plot(x_range, y_values, alpha=0.8)
