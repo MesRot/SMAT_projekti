@@ -218,7 +218,7 @@ def plot_both_models(results_df, df, param_dict, dif_fit_df, save=False):
         if (flow == 300 and sample == 2):
             ax[row, column].plot(dif_fit_df[0:22]["midpoint"], dif_fit_df[0:22]["fit_tissue"], alpha=0.6)
 
-    blue_patch = mpatches.Patch(color='blue', alpha=0.6, label='Model: 1PCM')
+    blue_patch = mpatches.Patch(color='#0090d1', label='Model: 1PCM')
     green_patch = mpatches.Patch(color='green', alpha=0.6, label='Model: EMG')
     red_patch = mpatches.Patch(color='red', alpha=0.8, label='True value')
     fig.legend(handles=[red_patch, green_patch, blue_patch]) 
