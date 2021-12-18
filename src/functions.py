@@ -202,25 +202,25 @@ def plot_both_models(results_df, df, param_dict, dif_fit_df, save=False):
         ax[row, column].set_title(f"Flow: {flow}, Sample: {sample}", fontsize=15)
 
         ax[row, column].scatter(group["midpoint"], group["tissue"], color="r") #original
-        ax[row, column].plot(x_range, emg_vals, color="g", alpha=0.6,) #our model
+        ax[row, column].plot(x_range, emg_vals, color="#0090d1", alpha=0.8) #our model
 
         #dif fit model
         if (flow == 100 and sample == 1):
-            ax[row, column].plot(dif_fit_df[110:132]["midpoint"], dif_fit_df[110:132]["fit_tissue"], alpha=0.6)
+            ax[row, column].plot(dif_fit_df[110:132]["midpoint"], dif_fit_df[110:132]["fit_tissue"], color="green", alpha=0.8)
         if (flow == 100 and sample == 2):
-            ax[row, column].plot(dif_fit_df[88:110]["midpoint"], dif_fit_df[88:110]["fit_tissue"], alpha=0.6)
+            ax[row, column].plot(dif_fit_df[88:110]["midpoint"], dif_fit_df[88:110]["fit_tissue"], color="green", alpha=0.8)
         if (flow == 200 and sample == 1):
-            ax[row, column].plot(dif_fit_df[66:88]["midpoint"], dif_fit_df[66:88]["fit_tissue"], alpha=0.6)
+            ax[row, column].plot(dif_fit_df[66:88]["midpoint"], dif_fit_df[66:88]["fit_tissue"], color="green", alpha=0.8)
         if (flow == 200 and sample == 2):
-            ax[row, column].plot(dif_fit_df[44:66]["midpoint"], dif_fit_df[44:66]["fit_tissue"], alpha=0.6)
+            ax[row, column].plot(dif_fit_df[44:66]["midpoint"], dif_fit_df[44:66]["fit_tissue"], color="green", alpha=0.8)
         if (flow == 300 and sample == 1):
-            ax[row, column].plot(dif_fit_df[22:44]["midpoint"], dif_fit_df[22:44]["fit_tissue"], alpha=0.6)
+            ax[row, column].plot(dif_fit_df[22:44]["midpoint"], dif_fit_df[22:44]["fit_tissue"], color="green", alpha=0.8)
         if (flow == 300 and sample == 2):
-            ax[row, column].plot(dif_fit_df[0:22]["midpoint"], dif_fit_df[0:22]["fit_tissue"], alpha=0.6)
+            ax[row, column].plot(dif_fit_df[0:22]["midpoint"], dif_fit_df[0:22]["fit_tissue"], color="green", alpha=0.8)
 
-    blue_patch = mpatches.Patch(color='#0090d1', alpha=0.6, label='Model: 1PCM')
-    green_patch = mpatches.Patch(color='green', alpha=0.6, label='Model: EMG')
-    red_patch = mpatches.Patch(color='red', alpha=0.8, label='True value')
+    blue_patch = mpatches.Patch(color='green', alpha=0.8, label='Model: 1TCM')
+    green_patch = mpatches.Patch(color='#0090d1', alpha=0.8, label='Model: EMG')
+    red_patch = mpatches.Patch(color='red', alpha=1, label='True value')
     fig.legend(handles=[red_patch, green_patch, blue_patch]) 
         
     if save:

@@ -20,7 +20,7 @@ df = rd.CreateFeature_df(df)
 
 #Tested graph
 selected = df[df["flow"] == 100]
-selected = selected[selected["sample"] == 1]
+selected = selected[selected["sample"] == 2]
 
 #print(selected)
 ########################
@@ -29,22 +29,13 @@ selected = selected[selected["sample"] == 1]
 
 start = 0
 stop = 265
-test_start = -5
-test_stop = 15
 
 area = np.linspace(start, stop, 1000)
-testarea = np.linspace(test_start, test_stop, 1000)
 
 fig, ax = plt.subplots()
 plt.subplots_adjust(left=0.25, bottom=0.3)
 
 ax.set_xlabel("Time [s]")
-
-#Custom testing area adjusters.
-start_position = plt.axes([0.05, 0.18, 0.03, 0.5])
-start_position_slider = Slider(start_position, "Range Start", -10, 300, valinit=0, orientation="vertical")
-stop_position = plt.axes([0.15, 0.18, 0.03, 0.5])
-stop_position_slider = Slider(stop_position, "Range Stop", -10, 300, valinit=265, orientation="vertical")
 
 #Myy sliders for controlling the central point of the peak.
 myy_position = plt.axes([0.25, 0.18, 0.65, 0.03])
@@ -58,7 +49,7 @@ sigma_slider = Slider(sigma_position, 'Sigma', -5, 50, valinit=1)
 
 #Lambda sliders for controlling the tail.
 lamda_position = plt.axes([0.25, 0.08, 0.65, 0.03])
-lamda_slider = Slider(lamda_position, 'Lambda', 0.001, 5, valinit=1)
+lamda_slider = Slider(lamda_position, 'Lambda', 0.0001, 1, valinit=1)
 
 #Height slider to control the scale of the graph.
 h_position = plt.axes([0.25, 0.03, 0.65, 0.03])
@@ -85,21 +76,11 @@ def update(val):
     lamda = lamda_slider.val
     h = h_slider.val
 
-    newstart = start_position_slider.val
-    newstop = stop_position_slider.val
-
-    print(myy, sigma, lamda, h, newstart, newstop)
-
-    #Custom drawing area
-    custom_area = np.linspace(newstart, newstop, 1000)
+    print(myy, sigma, lamda, h)
 
 
     # Draw model graph
-    # Notice that the graph can be manipulated via the specified drawing are
-    # ie. if the graph is drawn from 0 to 20 it is stretched when compared to
-    # 0 to 100
-    # To have the graph drawn to same drawing area set custom_area == area.
-    ax.plot(area, F.EMG(custom_area, myy, sigma, lamda, h), color = "blue")
+    ax.plot(area, F.EMG(area, myy, sigma, lamda, h), color = "blue")
 
 
     #Draw input and tissue graphs
@@ -111,8 +92,6 @@ sigma_slider.on_changed(update)
 lamda_slider.on_changed(update)
 h_slider.on_changed(update)
 
-start_position_slider.on_changed(update)
-stop_position_slider.on_changed(update)
 plt.show()
 
 # Parameters
